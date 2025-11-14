@@ -66,3 +66,29 @@ HAL_Delay(1000);
     - You should see the LED blinking on your board.
    
 Next time I will finish the tutorial (unfortunately I was really busy this week and didn't have as much time as I would've liked to work on this project), where they go through an interrupt code example.
+
+## Week of 11/14 Progress
+- Completed [STM32 Tutorial](https://www.youtube.com/watch?v=dnfuNT1dPiM)
+
+8. Interrupt Programming Task: Toggle Built-In LED with Built-In Button Press
+    - In the `.ioc` file, navigate in the left vertical navigation bar to System Core --> GPIO. Look at the Configuration area under GPIO Mode and Configuration. Here, the NVIC tab needs to match with the GPIO tab.
+    - Under the GPIO tab, click on the PC13 row. Note that the GPIO mode is External Interrupt Mode with Falling edge trigger detection. We want External Interrupt Mode rather than Event Mode, and we want the falling edge trigger in this case because PC13 has a pull-up resistor, so pressing the button goes from high signal to low.
+    - Under the NVIC tab, click on the EXTI line[15:10] interrupts row and check the Enabled checkbox.
+    - Upon Saving, you will be prompted to generate code. This will add EXTI interrupt initialization code to the GPIO Init function in `main.c` and an interrupt handler function to the interrupt file `stm32l4xx_it.c`.
+        - For the interrupt handler function `HAL_GPIO_EXTI_IRQHandler`: we pass in th pin value, and it double checks for an interrupt in that pin, clears the interrupt, and then calls an external interrupt callback function `HAL_GPIO_EXTI_Callback`.
+        - The default `HAL_GPIO_EXTI_Callback` is declared as `weak`, which means we overwrite it by defining it again (without `weak` keyword) elsewhere: in the "User Code" area of `main.c`.
+        - In our `HAL_GPIO_EXTI_Callback` implementation, for this task, we simply call `HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5)` so that the LED status is toggled when the button press interrupt occurs. We remove the blinking code in the infinite while loop.
+        - Notes: Never do delays in an interrupt -- some compilers will even throw a warning or error if you try. Also, later if there are more interrupts, you add conditional logic to the interrupt handler function or the callback function to handle the callbacks based on which GPIO pin is causing the interrupt.
+10. UART Programming Task: Communicate with PC with UART (Asynchronous Hardware Communication Protocol for Serial Data)
+    - In the `.ioc` file, navigate in the left vertical sidebar to Connectivity --> USART2. It is already configured with the standard. Note that Asynchronous mode for UART. We want to use interrupts instead of polling. Anyways, we don't change anything here for now, just taking a look.
+    - In `main.c`, find the `MX_USART2_UART_Init` function and use the open declaration function.
+    - In `project/Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart.h`, find the `HAL_UART_Transmit` function declaration. Call this function in `main.c` to transmit data via UART (can do so right before the infinite while loop).
+    - In Console, navigate to the + symbol and open a command shell console (doing so for the first time may require initial configuration).
+    - Build/run the code.
+    - Switch the console view to the STM32xx (CONNECTED) Console, and/or use PuTTY/Tera Term to view the output.
+    - Note code space constraints: avoid importing libraries like `string.h`.
+
+Next steps:
+- Keep learning more about STM32 HAL and LL programming & experiment with the STM32
+- Find metrics for measuring performance on all devices
+- Read about interrupt handling on the devices
